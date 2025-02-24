@@ -3,9 +3,6 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
-const collegeRoutes = require("./routes/college.routes");
-const myCollegeRoutes = require("./routes/my.college.routes");
-const reviewRoutes = require("./routes/review.routes");
 
 connectDB();
 
@@ -14,9 +11,6 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.use("/api/auth", authRoutes);
-app.use("/api/colleges", collegeRoutes);
-app.use("/api/my-colleges", myCollegeRoutes);
-app.use("/api/colleges/reviews", reviewRoutes);
 
 // Define a route for the home page
 app.get("/", (req, res) => {
