@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       type: String, // To ensure users log in from only one device at a time
       default: null,
     },
+    agentIncome: {
+      type: Number,
+      default: 0,
+    }, // Only for Agents
   },
   { timestamps: true }
 );
