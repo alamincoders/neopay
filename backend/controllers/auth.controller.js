@@ -1,61 +1,79 @@
 const User = require("../models/User");
+const Admin = require("../models/Admin");
+const generateToken = require("../utils/generateToken");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 
-// Register a new user
-exports.registerUser = async (req, res) => {
+// Register User or Agent
+const registerUser = async (req, res) => {
   try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    const newUser = new User({ ...req.body, password: hashedPassword });
-    const savedUser = await newUser.save();
-    res.status(201).json({
-      message: "User registered successfully",
-      user: savedUser,
+    const { name, email, mobileNumber, pin, accountType, nid } = req.body;
+
+    const userExists = await User.findOne({ email });
+    if (userExists)
+      return res.status(400).json({ message: "User already exists" });
+
+    const user = await User.create({
+      name,
+      email,
+      mobileNumber,
+      pin,
+      accountType,
+      nid,
     });
-  } catch (error) {
-    res.status(500).json({ message: "Error registering user", error });
-  }
-};
 
-// Login a user
-exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        accountType: user.accountType,
+        token: generateToken(user._id),
+      });
+    } else {
+      res.status(400).json({ message: "Invalid user data" });
     }
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.status(200).json({ token, userId: user._id });
   } catch (error) {
-    res.status(500).json({ message: "Error logging in", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Get user profile
-exports.getUserProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    res.status(200).json({ message: "User profile fetched", user });
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user profile", error });
+// Login User/Agent
+const loginUser = async (req, res) => {
+  const { email, pin } = req.body;
+  const user = await User.findOne({ email });
+
+  if (user && (await user.comparePin(pin))) {
+    user.deviceToken = generateToken(user._id); // Single device login
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      accountType: user.accountType,
+      token: user.deviceToken,
+    });
+  } else {
+    res.status(401).json({ message: "Invalid credentials" });
   }
 };
 
-// Update user profile
-exports.updateUserProfile = async (req, res) => {
-  try {
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, req.body, {
-      new: true,
+// Admin Login
+const loginAdmin = async (req, res) => {
+  const { email, password } = req.body;
+  const admin = await Admin.findOne({ email });
+
+  if (admin && (await admin.comparePassword(password))) {
+    res.json({
+      _id: admin._id,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role,
+      token: generateToken(admin._id),
     });
-    res.status(200).json({
-      message: "User profile updated successfully",
-      user: updatedUser,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating user profile", error });
+  } else {
+    res.status(401).json({ message: "Invalid credentials" });
   }
 };
+
+module.exports = { registerUser, loginUser, loginAdmin };

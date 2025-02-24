@@ -2,16 +2,19 @@ const express = require("express");
 const {
   registerUser,
   loginUser,
-  getUserProfile,
-  updateUserProfile,
+  loginAdmin,
 } = require("../controllers/auth.controller");
-const { protect } = require("../middleware/auth.middleware"); // Assume you have this middleware for authentication
+const { protect } = require("../middleware/auth.middleware");
+
 const router = express.Router();
 
-// Auth routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/profile", protect, getUserProfile);
-router.put("/profile", protect, updateUserProfile);
+router.post("/admin/login", loginAdmin);
+
+// Example of using protect middleware to secure routes
+router.get("/profile", protect, (req, res) => {
+  res.json({ message: "This is a protected route" });
+});
 
 module.exports = router;
