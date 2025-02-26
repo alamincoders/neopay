@@ -1,4 +1,5 @@
 const express = require("express");
+const morgan = require("morgan");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectDB = require("./config/db");
@@ -9,6 +10,7 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(morgan("tiny"));
 
 app.use("/api/auth", authRoutes);
 
