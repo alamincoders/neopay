@@ -12,7 +12,6 @@ const userSchema = new mongoose.Schema(
       type: String, // Hashed PIN for security
       required: true,
       minlength: 5,
-      maxlength: 5,
     },
     mobileNumber: {
       type: String,

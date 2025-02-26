@@ -8,16 +8,24 @@ const adminSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    pin: {
+      type: String, // Hashed PIN for security
+      required: true,
+      minlength: 5,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
     },
-    password: {
+    mobileNumber: {
       type: String,
       required: true,
+      unique: true,
+      match: /^[0-9]{11}$/, // Example: Validates 11-digit phone numbers
     },
+
     role: {
       type: String,
       enum: ["Admin", "SuperAdmin"],
@@ -34,6 +42,7 @@ const adminSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
 
 // Hash password before saving
 adminSchema.pre("save", async function (next) {
